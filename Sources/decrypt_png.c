@@ -35,7 +35,6 @@ npt_read_chunks(npt_byte_t* buffer, npt_png_chunk** chunks)
 		chunk->_name = *((npt_uint32_t*)buffer);
 		char bla[5] = {0x00};
 		memcpy(bla, buffer, 4);
-		printf("name = %s %u\n", bla, chunk->_name);
 		buffer += 4;
 
 		/// Data
@@ -100,7 +99,7 @@ npt_process_chunks(npt_png_chunk** chunks)
 	}
 
 	/// Process buffer
-	const size_t ss = tmpSize * 16;
+	const size_t ss = tmpSize * 128; // Raise this value if you encounter problems
 	npt_byte_t* idats_new = (npt_byte_t*)malloc(sizeof(npt_byte_t) * ss);
 	z_stream infstrm, defstrm;
 	infstrm.zalloc = Z_NULL;
@@ -160,21 +159,23 @@ npt_process_chunks(npt_png_chunk** chunks)
 		chk->_data = malloc(chk->_size);
 		memcpy(chk->_data, &(idats_final[copied]), chk->_size);
 		chk->_crc = (npt_uint32_t)npt_crc((npt_byte_t[4]){0x49, 0x44, 0x41, 0x54}, chk->_data, chk->_size);
-		*(outt + tmp) = chk;
+		*(outt + tmp++) = chk;
 		
 		copied += blk_size;
 		to_copy -= blk_size;
-
-		tmp++;
 	}
 	free(idats_final);
 
 	deflateEnd(&defstrm);
 
 	/// Append the last chunks
-	for (j = i; j < NPT_MAX_CHUNKS - i; j++)
+	for (j = j; j < NPT_MAX_CHUNKS - j; j++)
 	{
 		npt_png_chunk* chunk = *(chunks + j);
+		if (__idatchunk == chunk->_name)
+		{
+			continue;
+		}
 		npt_png_chunk* chk = (npt_png_chunk*)malloc(sizeof(npt_png_chunk));
 		chk->_size = chunk->_size;
 		chk->_name = chunk->_name;
@@ -247,7 +248,7 @@ npt_process_chunks_simple(npt_png_chunk** chunks)
 			memcpy(chunk->_data, deflatedbuf, chunk->_size);
 			chunk->_crc = (npt_uint32_t)npt_crc((npt_byte_t[4]){0x49, 0x44, 0x41, 0x54}, chunk->_data, chunk->_size);
 			
-			deflateEnd(&defstrm);
+            deflateEnd(&defstrm);
             
 			free(deflatedbuf);
 			free(inflatedbuf);
@@ -264,7 +265,7 @@ npt_create_decrypted_in_memory(npt_png_chunk** chunks, unsigned int* size)
 	memcpy(outt, &__pngheader, 8);
 	unsigned int len = 8;
 
-	/// Append PNG chunks, except CgBI
+	/// Append PNG chunks, except CgBI abd iDOT
 	for (unsigned int i = 0; i < NPT_MAX_CHUNKS; i++)
 	{
 		npt_png_chunk* chunk = *(chunks + i);
