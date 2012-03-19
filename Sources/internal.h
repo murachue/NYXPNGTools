@@ -43,6 +43,7 @@ static const size_t __pngheader = 727905341920923785; // {0x89, 0x50, 0x4E, 0x47
 static const unsigned int __idatchunk = 1413563465; // {0x49, 0x44, 0x41, 0x54}
 static const unsigned int __iendchunk = 1145980233; // {0x49, 0x45, 0x4E, 0x44}
 static const unsigned int __cgbichunk = 1229088579; // {0x43, 0x67, 0x42, 0x49}
+static const unsigned int __idotchunk = 1414481001; // 
 
 
 /* Typedefs */
