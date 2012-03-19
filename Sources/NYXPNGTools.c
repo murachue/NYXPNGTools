@@ -148,32 +148,22 @@ npt_create_uncrushed_from_file(const char* path, unsigned int* size, int* error)
 	}
 
 	/// Read PNG chunks
-	npt_png_chunk** chunks = NULL;
-	if (st.st_size < 524288) // Small image, max 512Kb
+	npt_png_chunk** chunks = (npt_png_chunk**)malloc(sizeof(npt_png_chunk*) * NPT_MAX_CHUNKS);
+	const npt_uint32_t idats = npt_read_chunks(buffer, chunks);
+	/// Process them
+	if (idats > 1)
 	{
-		chunks = (npt_png_chunk**)malloc(sizeof(npt_png_chunk*) * 8);
-		(void)npt_read_chunks(buffer, chunks);
-		npt_process_chunks_simple(chunks);
+		npt_png_chunk** ret = npt_process_chunks(chunks);
+		npt_free_png_chunks(chunks);
+		if (!ret)
+		{
+			return NULL;
+		}
+		chunks = ret;
 	}
 	else
 	{
-		chunks = (npt_png_chunk**)malloc(sizeof(npt_png_chunk*) * NPT_MAX_CHUNKS);
-		const npt_uint32_t idats = npt_read_chunks(buffer, chunks);
-		/// Process them
-		if (idats > 1)
-		{
-			npt_png_chunk** ret = npt_process_chunks(chunks);
-			npt_free_png_chunks(chunks);
-			if (!ret)
-			{
-				return NULL;
-			}
-			chunks = ret;
-		}
-		else
-		{
-			npt_process_chunks_simple(chunks);
-		}
+		npt_process_chunks_simple(chunks);
 	}
 	/// No longer needed
 	free(buffer);
