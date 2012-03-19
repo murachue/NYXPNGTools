@@ -42,15 +42,6 @@ npt_read_chunks(npt_byte_t* buffer, npt_png_chunk** chunks)
 		chunk->_data = (npt_byte_t*)malloc(sizeof(npt_byte_t) * chunk->_size);
 		memcpy(chunk->_data, buffer, chunk->_size);
 		buffer += chunk->_size;
-		
-		if (__idotchunk == chunk->_name)
-		{
-			for (int j = 0; j < chunk->_size; j++)
-			{
-				printf("%x ", chunk->_data[j]);
-			}
-			printf("\n");
-		}
 
 		/// CRC, 4 bytes
 		chunk->_crc = ntohl(*((npt_uint32_t*)buffer));
