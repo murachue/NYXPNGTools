@@ -18,7 +18,7 @@
  *	@function npt_flip_channels
  *	@abstract Flip the RGB channels
  *	@param buffer [in] : PNG data
- *  @param size [out] : Size of the returned buffer
+ *	@param size [out] : Size of the returned buffer
  *	@return PNG buffer with flipped channels
  */
 npt_byte_t* npt_flip_channels(npt_byte_t* buffer, npt_uint32_t* size);
