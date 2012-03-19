@@ -33,12 +33,24 @@ npt_read_chunks(npt_byte_t* buffer, npt_png_chunk** chunks)
 
 		/// Name, 4 bytes
 		chunk->_name = *((npt_uint32_t*)buffer);
+		char bla[5] = {0x00};
+		memcpy(bla, buffer, 4);
+		printf("name = %s %u\n", bla, chunk->_name);
 		buffer += 4;
 
 		/// Data
 		chunk->_data = (npt_byte_t*)malloc(sizeof(npt_byte_t) * chunk->_size);
 		memcpy(chunk->_data, buffer, chunk->_size);
 		buffer += chunk->_size;
+		
+		if (__idotchunk == chunk->_name)
+		{
+			for (int j = 0; j < chunk->_size; j++)
+			{
+				printf("%x ", chunk->_data[j]);
+			}
+			printf("\n");
+		}
 
 		/// CRC, 4 bytes
 		chunk->_crc = ntohl(*((npt_uint32_t*)buffer));
@@ -79,6 +91,7 @@ npt_process_chunks(npt_png_chunk** chunks)
 			*(outt + i) = chk;
 		}
 	}
+
 	/// Concatenate IDATs into a single buffer
 	npt_byte_t* idats_orig = NULL;
 	size_t tmpSize = 0;
@@ -141,11 +154,11 @@ npt_process_chunks(npt_png_chunk** chunks)
 	deflate(&defstrm, Z_FINISH);
 
 	free(idats_new);
-	
+
 	/// Now, re-create the IDATs
 	int to_copy = (int)defstrm.total_out;
 	int copied = 0;
-	j = i;
+	int tmp = i;
 	while (to_copy > 0)
 	{
 		const npt_uint32_t blk_size = (to_copy > NPT_MAX_IDAT_LENGTH) ? NPT_MAX_IDAT_LENGTH : (npt_uint32_t)to_copy;
@@ -156,26 +169,28 @@ npt_process_chunks(npt_png_chunk** chunks)
 		chk->_data = malloc(chk->_size);
 		memcpy(chk->_data, &(idats_final[copied]), chk->_size);
 		chk->_crc = (npt_uint32_t)npt_crc((npt_byte_t[4]){0x49, 0x44, 0x41, 0x54}, chk->_data, chk->_size);
-		*(outt + j) = chk;
+		*(outt + tmp) = chk;
 		
 		copied += blk_size;
 		to_copy -= blk_size;
 
-		j++;
+		tmp++;
 	}
 	free(idats_final);
 
+	deflateEnd(&defstrm);
+
 	/// Append the last chunks
-	for (i = j; i < NPT_MAX_CHUNKS - j; i++)
+	for (j = i; j < NPT_MAX_CHUNKS - i; j++)
 	{
-		npt_png_chunk* chunk = *(chunks + i);
+		npt_png_chunk* chunk = *(chunks + j);
 		npt_png_chunk* chk = (npt_png_chunk*)malloc(sizeof(npt_png_chunk));
 		chk->_size = chunk->_size;
 		chk->_name = chunk->_name;
 		chk->_data = malloc(chunk->_size);
 		memcpy(chk->_data, chunk->_data, chunk->_size);
 		chk->_crc = chunk->_crc;
-		*(outt + j) = chk;
+		*(outt + tmp++) = chk;
 
 		if (__iendchunk == chunk->_name)
 			break;
@@ -241,7 +256,7 @@ npt_process_chunks_simple(npt_png_chunk** chunks)
 			memcpy(chunk->_data, deflatedbuf, chunk->_size);
 			chunk->_crc = (npt_uint32_t)npt_crc((npt_byte_t[4]){0x49, 0x44, 0x41, 0x54}, chunk->_data, chunk->_size);
 			
-            deflateEnd(&defstrm);
+			deflateEnd(&defstrm);
             
 			free(deflatedbuf);
 			free(inflatedbuf);
@@ -263,7 +278,7 @@ npt_create_decrypted_in_memory(npt_png_chunk** chunks, unsigned int* size)
 	{
 		npt_png_chunk* chunk = *(chunks + i);
 
-		if (__cgbichunk != chunk->_name)
+		if (__cgbichunk != chunk->_name && __idotchunk != chunk->_name)
 		{
 			const npt_uint32_t tmp = htonl(chunk->_size);
 			chunk->_crc = htonl(chunk->_crc);

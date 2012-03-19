@@ -18,7 +18,7 @@
  *	@function npt_read_chunks
  *	@abstract Parse all PNG chunks
  *	@param buffer [in] : PNG data
- *  @param chunks [out] : List of chunks, must be pre-allocated
+ *	@param chunks [out] : List of chunks, must be pre-allocated
  *	@return Number of IDATs section
  */
 unsigned int npt_read_chunks(npt_byte_t* buffer, npt_png_chunk** chunks);
@@ -42,7 +42,7 @@ void npt_process_chunks_simple(npt_png_chunk** chunks);
  *	@function npt_create_decrypted_in_memory
  *	@abstract Create a PNG in memory
  *	@param chunks [in] : List of chunks
- *  @param size [out] : Output buffer size 
+ *	@param size [out] : Output buffer size 
  *	@return Buffer containing PNG data
  */
 npt_byte_t* npt_create_decrypted_in_memory(npt_png_chunk** chunks, unsigned int* size);
