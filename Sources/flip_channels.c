@@ -10,6 +10,7 @@
 
 #include "flip_channels.h"
 #include "png.h"
+#include <memory.h>
 
 
 typedef struct
