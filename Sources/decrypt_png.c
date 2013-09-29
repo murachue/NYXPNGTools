@@ -100,7 +100,7 @@ npt_process_chunks(npt_png_chunk** chunks)
 	}
 
 	/// Process buffer
-	const size_t ss = tmpSize * 256; // Raise this value if you encounter problems
+	const size_t ss = tmpSize * 384; // Raise this value if you encounter problems
 	npt_byte_t* idats_new = (npt_byte_t*)malloc(sizeof(npt_byte_t) * ss);
 	z_stream infstrm, defstrm;
 	infstrm.zalloc = Z_NULL;
