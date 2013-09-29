@@ -100,7 +100,7 @@ npt_process_chunks(npt_png_chunk** chunks)
 	}
 
 	/// Process buffer
-	const size_t ss = tmpSize * 128; // Raise this value if you encounter problems
+	const size_t ss = tmpSize * 256; // Raise this value if you encounter problems
 	npt_byte_t* idats_new = (npt_byte_t*)malloc(sizeof(npt_byte_t) * ss);
 	z_stream infstrm, defstrm;
 	infstrm.zalloc = Z_NULL;
@@ -120,7 +120,7 @@ npt_process_chunks(npt_png_chunk** chunks)
 		return NULL;
 	}
 	const int ret = inflate(&infstrm, Z_NO_FLUSH);
-	if (ret < 0)
+	if (ret != Z_STREAM_END)
 	{
 		NPT_DLOG("inflate %d\n", ret);
 		inflateEnd(&infstrm);
@@ -130,6 +130,13 @@ npt_process_chunks(npt_png_chunk** chunks)
 	}
 	inflateEnd(&infstrm);
 	free(idats_orig);
+
+	if (infstrm.total_out >= ss)
+	{
+		NPT_DLOG("inflate total_out=%d >= ss=%d\n", infstrm.total_out, ss);
+		free(idats_new);
+		return NULL;
+	}
 
 	/// Deflate again, the regular PNG-compatible way
 	npt_byte_t* idats_final = (npt_byte_t*)malloc(ss);
