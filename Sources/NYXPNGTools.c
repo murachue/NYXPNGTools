@@ -12,7 +12,7 @@
 #include "internal.h"
 #include "decrypt_png.h"
 #include "flip_channels.h"
-#include <unistd.h>
+//#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <string.h>
 #include <zlib.h>
+#include <io.h>
 
 
 #pragma mark - Public functions
@@ -116,7 +117,7 @@ npt_create_uncrushed_from_file(const char* path, unsigned int* size, int* error)
 	}
 
 	/// Open the file
-	int fd = open(path, O_RDONLY);
+	int fd = open(path, O_RDONLY | O_BINARY);
 	if (-1 == fd)
 	{
 		*error = npt_err_open_failed;

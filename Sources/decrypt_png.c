@@ -12,6 +12,7 @@
 #include <string.h>
 #include <zlib.h>
 #include <stdio.h>
+#include <WinSock2.h>
 
 
 unsigned int
@@ -75,7 +76,7 @@ npt_process_chunks(npt_png_chunk** chunks)
 			npt_png_chunk* chk = (npt_png_chunk*)malloc(sizeof(npt_png_chunk));
 			chk->_size = chunk->_size;
 			chk->_name = chunk->_name;
-			chk->_data = malloc(sizeof(npt_byte_t) * chunk->_size);
+			chk->_data = (npt_byte_t*)malloc(sizeof(npt_byte_t) * chunk->_size);
 			memcpy(chk->_data, chunk->_data, chunk->_size);
 			chk->_crc = chunk->_crc;
 			*(outt + i) = chk;
@@ -91,7 +92,7 @@ npt_process_chunks(npt_png_chunk** chunks)
 		if (__idatchunk == chunk->_name)
 		{
 			tmpSize += chunk->_size;
-			idats_orig = realloc(idats_orig, tmpSize);
+			idats_orig = (npt_byte_t*)realloc(idats_orig, tmpSize);
 			memcpy(&(idats_orig[tmpSize - chunk->_size]), chunk->_data, chunk->_size);
 		}
 		else if (__iendchunk == chunk->_name)
@@ -156,9 +157,10 @@ npt_process_chunks(npt_png_chunk** chunks)
 		npt_png_chunk* chk = (npt_png_chunk*)malloc(sizeof(npt_png_chunk));
 		chk->_size = blk_size;
 		chk->_name = __idatchunk;
-		chk->_data = malloc(chk->_size);
+		chk->_data = (npt_byte_t*)malloc(chk->_size);
 		memcpy(chk->_data, &(idats_final[copied]), chk->_size);
-		chk->_crc = (npt_uint32_t)npt_crc((npt_byte_t[4]){0x49, 0x44, 0x41, 0x54}, chk->_data, chk->_size);
+		npt_byte_t name[4] = {0x49, 0x44, 0x41, 0x54};
+		chk->_crc = (npt_uint32_t)npt_crc(name, chk->_data, chk->_size);
 		*(outt + tmp++) = chk;
 		
 		copied += blk_size;
@@ -179,7 +181,7 @@ npt_process_chunks(npt_png_chunk** chunks)
 		npt_png_chunk* chk = (npt_png_chunk*)malloc(sizeof(npt_png_chunk));
 		chk->_size = chunk->_size;
 		chk->_name = chunk->_name;
-		chk->_data = malloc(chunk->_size);
+		chk->_data = (npt_byte_t*)malloc(chunk->_size);
 		memcpy(chk->_data, chunk->_data, chunk->_size);
 		chk->_crc = chunk->_crc;
 		*(outt + tmp++) = chk;
@@ -244,9 +246,10 @@ npt_process_chunks_simple(npt_png_chunk** chunks)
 			/// Update chunk
 			free(chunk->_data);
 			chunk->_size = (npt_uint32_t)defstrm.total_out;
-			chunk->_data = malloc(sizeof(npt_byte_t) * chunk->_size);
+			chunk->_data = (npt_byte_t*)malloc(sizeof(npt_byte_t) * chunk->_size);
 			memcpy(chunk->_data, deflatedbuf, chunk->_size);
-			chunk->_crc = (npt_uint32_t)npt_crc((npt_byte_t[4]){0x49, 0x44, 0x41, 0x54}, chunk->_data, chunk->_size);
+			npt_byte_t name[4] = {0x49, 0x44, 0x41, 0x54};
+			chunk->_crc = (npt_uint32_t)npt_crc(name, chunk->_data, chunk->_size);
 			
             deflateEnd(&defstrm);
             
@@ -261,7 +264,7 @@ npt_byte_t*
 npt_create_decrypted_in_memory(npt_png_chunk** chunks, unsigned int* size)
 {
 	/// PNG header
-	npt_byte_t* outt = malloc(8);
+	npt_byte_t* outt = (npt_byte_t*)malloc(8);
 	memcpy(outt, &__pngheader, 8);
 	unsigned int len = 8;
 
@@ -277,22 +280,22 @@ npt_create_decrypted_in_memory(npt_png_chunk** chunks, unsigned int* size)
 
 			/// Size
 			len += 4;
-			outt = realloc(outt, len);
+			outt = (npt_byte_t*)realloc(outt, len);
 			memcpy(&(outt[len - 4]), &tmp, 4);
 
 			/// Name
 			len += 4;
-			outt = realloc(outt, len);
+			outt = (npt_byte_t*)realloc(outt, len);
 			memcpy(&(outt[len - 4]), &chunk->_name, 4);
 
 			/// Data
 			len += chunk->_size;
-			outt = realloc(outt, len);
+			outt = (npt_byte_t*)realloc(outt, len);
 			memcpy(&(outt[len - chunk->_size]), chunk->_data, chunk->_size);
 
 			/// CRC
 			len += 4;
-			outt = realloc(outt, len);
+			outt = (npt_byte_t*)realloc(outt, len);
 			memcpy(&(outt[len - 4]), &chunk->_crc, 4);
 		}
 		

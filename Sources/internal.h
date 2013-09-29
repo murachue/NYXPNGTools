@@ -93,4 +93,6 @@ npt_free_png_chunks(npt_png_chunk** chunks);
 npt_ulong_t
 npt_crc(npt_byte_t* name, npt_byte_t* buf, const npt_uint32_t size);
 
+typedef signed int ssize_t;
+
 #endif /* _NYXPNGTOOLS_INTERNAL_H_ */

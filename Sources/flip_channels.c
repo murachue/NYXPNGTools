@@ -50,7 +50,9 @@ npt_flip_channels(npt_byte_t* buffer, npt_uint32_t* size)
 	}
 
 	/// Read buffer, skip the first 8 bytes as it's the PNG header
-	npt_custom_read_s source = (npt_custom_read_s){._buffer = buffer, ._read = 8};
+	npt_custom_read_s source = {0};
+	source._buffer = buffer;
+	source._read = 8;
 	/// Custom callback function to read from a buffer
 	png_set_read_fn(png_ptr, (png_voidp)&source, npt_png_read_from_memory);
 	png_set_sig_bytes(png_ptr, 8);
@@ -130,7 +132,9 @@ npt_flip_channels(npt_byte_t* buffer, npt_uint32_t* size)
 	}
 
 	/// Custom write function
-	npt_custom_write_s ctx = (npt_custom_write_s){._buffer = NULL, ._size = 0};
+	npt_custom_write_s ctx = {0};
+	ctx._buffer = NULL;
+	ctx._size = 0;
 	png_set_write_fn(png_ptr, &ctx, npt_png_write_to_memory, NULL);
 
 	/// Write header
@@ -201,7 +205,7 @@ void npt_png_write_to_memory(png_structp png_ptr, png_bytep data, png_size_t len
 	/// Compute new size
 	const size_t new_size = length + ctx->_size;
 	/// Update buffer
-	ctx->_buffer = realloc(ctx->_buffer, new_size);
+	ctx->_buffer = (npt_byte_t*)realloc(ctx->_buffer, new_size);
 	memcpy(&(ctx->_buffer[ctx->_size]), data, length);
 	/// Update size
 	ctx->_size = new_size;
